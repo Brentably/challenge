@@ -5,3 +5,5 @@ export type Record = {
 }
 
 export type Database = {data: Record[]}
+
+export type WalletsToQueues = {[key: string]: Array<()=>Promise<void>>}

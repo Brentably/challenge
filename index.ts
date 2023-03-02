@@ -1,14 +1,15 @@
 import { Wallet } from 'ethers'
 import databaseJSON from './database.json'
 import generateWallets from './generateWallets'
-import { Database } from './types'
+import { Database, WalletsToQueues } from './types'
 import fs from 'fs'
 import signAndWrite from './signAndWrite'
 
+const startTime = Date.now()
 const BATCH_SIZE = 10
+let keysInUse = new Set()
 
 export async function main() {
-  const startTime = Date.now()
 const wallets = generateWallets()
 
 const database:Database = JSON.parse(JSON.stringify(databaseJSON))
