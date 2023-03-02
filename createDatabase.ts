@@ -6,7 +6,7 @@ import { Database } from './types'
 
 let database:Database = {data: []}
 
-for(let i = 0; i<100000; i++) {
+for(let i = 0; i<5000; i++) {
   let number = String(i)
   database.data.push({numString: number})
 }
