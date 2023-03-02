@@ -1,40 +1,75 @@
-import { Wallet } from 'ethers'
+import generateWallets from "./generateWallets"
+import { Database } from "./types"
 import databaseJSON from './database.json'
-import generateWallets from './generateWallets'
-import { Database, WalletsToQueues } from './types'
+import { ethers } from "ethers"
 import fs from 'fs'
-import signAndWrite from './signAndWrite'
 
 const startTime = Date.now()
-const BATCH_SIZE = 10
+const BATCH_SIZE = 1000
+let counter = 0
+const database:Database = JSON.parse(JSON.stringify(databaseJSON))
 let keysInUse = new Set()
 
-export async function main() {
-const wallets = generateWallets()
+// function signs and "writes" a single record in the db
+async function signAndWrite(wallet:ethers.Wallet, index: number) {
+  if(keysInUse.has(wallet.address)) throw new Error('multiple keys signing at once')
+  keysInUse.add(wallet.address)
+  const signature = await wallet?.signMessage(JSON.stringify(database.data[index]))
+    database.data[index].signature = signature
+    // if(!wallet!.address) throw new Error("line 23")
+    database.data[index].signerPubKey = wallet!.address
+    // console.log(database.data[counter])
 
-const database:Database = JSON.parse(JSON.stringify(databaseJSON))
+  keysInUse.delete(wallet.address)
+}
 
-// while there are still unsigned messages, we want to keep this process of iterating through keys and signing batches going
-const allPromises = []
-let counter = 0;
-while(counter < database.data.length) {
-  let currentWallet = wallets.pop()
-  wallets.unshift(currentWallet!)
-
-  for(let i = 0; i < BATCH_SIZE; i++) {
-    let promise = signAndWrite(currentWallet!, database, counter)
-    allPromises.push(promise)
-    counter++
+// 
+async function signBatches(wallet:ethers.Wallet) {
+  console.log(wallet.address, counter)
+  console.log(process.pid)
+  while(counter < database.data.length - 1) {
+    let initIndex = counter
+    let endIndex = counter + 10
+    // increment the counter
+    counter = counter + 10
+    // if(wallet.address=='0x7d041c66462857B38C948858719d285383829661') console.log(counter)
+    
+    // sign the records, one by one
+    for(let index = initIndex; index < endIndex; index++) {
+      await signAndWrite(wallet, index)
+    }
   }
 }
 
-await Promise.all(allPromises)
-fs.writeFileSync('database.json', JSON.stringify(database))
-console.log(Date.now() - startTime, 'ms')
-// for(let record of database.data) {
-//   const signedRecord = await firstSigner!.signMessage(JSON.stringify(record))
-//   console.log(record, signedRecord)
+
+export default async function main() {
+  const wallets = generateWallets()
+  
+  const allPromises = []
+ 
+  for(let wallet of wallets) {
+    let p = signBatches(wallet)
+    allPromises.push(p)
+  }
+
+  await Promise.all(allPromises) // wait till everything is done
+  fs.writeFileSync('database.json', JSON.stringify(database))
+  console.log(Date.now() - startTime, 'milliseconds')
+}
+
+main()
+
+
+
+
+
+// function testFunc() {
+//   let counter = 10
+//   function something() {
+//     counter += 10
+//   }
+//   something()
+//   console.log(counter)
 // }
 
-}
-main()
+// testFunc()
