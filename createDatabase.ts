@@ -1,12 +1,10 @@
 // create a database with 100k records to be signed.
 import fs from 'fs'
+import { Database } from './types'
 
-interface Record {
-  numString: string
-  singature?: string
-}
 
-let database:{data: Record[]} = {data: []}
+
+let database:Database = {data: []}
 
 for(let i = 0; i<100000; i++) {
   let number = String(i)

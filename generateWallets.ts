@@ -3,7 +3,7 @@ dotenv.config()
 import {ethers} from 'ethers'
 
 
-
+// generates an array of wallets from a mnemonic
 export default function generateWallets(MNEMONIC:string = process.env.MNEMONIC!):ethers.Wallet[] {
   let wallets:ethers.Wallet[] = []
   for(let i = 0; i<100; i++) {
