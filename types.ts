@@ -1,7 +1,7 @@
 export type Record = {
   numString: string
   signature?: string | Buffer
-  signerKey?: string
+  signerPubKey?: string
 }
 
 export type Database = {data: Record[]}
